@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora de IVA — Añade o desglosa el IVA al instante</title>
+<meta name="description" content="Calcula el IVA de cualquier importe: añádelo a un precio sin impuestos o desglósalo de un precio final. Tipos por país incluidos.">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1SK05SLPHF"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-1SK05SLPHF');
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0E1B2E;--ink-soft:#16253C;--paper-line:#22364F;--growth:#8FFFC0;--gold:#E8B75E;
+    --text:#F1EFE7;--text-dim:#93A3B8;--danger:#E8846E;--radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink);color:var(--text);font-family:'Inter',sans-serif;line-height:1.5;
+    background-image:linear-gradient(var(--paper-line) 1px, transparent 1px),linear-gradient(90deg, var(--paper-line) 1px, transparent 1px);
+    background-size:32px 32px;background-position:center top;
+  }
+  .veil{min-height:100vh;background:linear-gradient(180deg, rgba(14,27,46,0.94) 0%, rgba(14,27,46,0.85) 40%, rgba(14,27,46,0.96) 100%);}
+  .wrap{max-width:960px;margin:0 auto;padding:56px 24px 96px;position:relative;}
+  .lang-toggle{
+    position:absolute;top:56px;right:24px;background:var(--ink-soft);border:1px solid var(--paper-line);color:var(--text-dim);
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;padding:8px 14px;border-radius:20px;
+    cursor:pointer;display:flex;align-items:center;gap:6px;
+  }
+  .lang-toggle:hover{color:var(--growth);border-color:var(--growth);}
+  @media(max-width:600px){.lang-toggle{position:static;margin-bottom:24px;display:inline-flex;}}
+  .site-nav{display:flex;gap:8px;margin-bottom:32px;flex-wrap:wrap;}
+  .site-nav a{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.06em;color:var(--text-dim);
+    text-decoration:none;padding:7px 14px;border:1px solid var(--paper-line);border-radius:20px;
+  }
+  .site-nav a:hover{color:var(--text);}
+  .site-nav a.active{color:var(--ink);background:var(--growth);border-color:var(--growth);font-weight:500;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;
+    color:var(--gold);display:flex;align-items:center;gap:10px;margin-bottom:18px;
+  }
+  .eyebrow::before{content:"";width:22px;height:1px;background:var(--gold);display:inline-block;}
+  h1{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(28px,4.4vw,46px);line-height:1.12;margin:0 0 14px;max-width:16ch;}
+  .sub{color:var(--text-dim);font-size:16px;max-width:52ch;margin:0 0 44px;}
+  .ledger-total{
+    border-top:1px solid var(--paper-line);border-bottom:1px solid var(--paper-line);padding:28px 0;
+    margin-bottom:36px;display:flex;flex-wrap:wrap;gap:32px;justify-content:space-between;
+  }
+  .figure-label{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;
+    color:var(--text-dim);margin-bottom:8px;
+  }
+  .figure-value{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(24px,3.8vw,38px);font-variant-numeric:tabular-nums;}
+  .figure-value.growth{color:var(--growth);}
+  .figure-value.gold{color:var(--gold);}
+  .figure-block{flex:1;min-width:140px;}
+  .grid{display:grid;grid-template-columns:1fr;gap:24px;}
+  @media(min-width:800px){.grid{grid-template-columns: 1fr 1fr;}}
+  .panel{background:rgba(255,255,255,0.02);border:1px solid var(--paper-line);border-radius:var(--radius);padding:28px;}
+  .panel h2{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;
+    color:var(--text-dim);margin:0 0 24px;font-weight:500;
+  }
+  .field{margin-bottom:22px;}
+  .field:last-child{margin-bottom:0;}
+  .currency-field{margin-bottom:26px;}
+  select{
+    width:100%;background:var(--ink-soft);color:var(--text);border:1px solid var(--paper-line);
+    border-radius:8px;padding:10px 12px;font-family:'IBM Plex Mono',monospace;font-size:13px;
+    appearance:none;-webkit-appearance:none;
+    background-image:linear-gradient(45deg, transparent 50%, var(--text-dim) 50%), linear-gradient(135deg, var(--text-dim) 50%, transparent 50%);
+    background-position: calc(100% - 18px) center, calc(100% - 13px) center;
+    background-size:5px 5px, 5px 5px;background-repeat:no-repeat;cursor:pointer;
+  }
+  select:focus{outline:none;border-color:var(--growth);}
+  .unit{font-size:14px;}
+  .field-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
+  .field-row label{font-size:14px;color:var(--text);}
+  .field-row .val{display:flex;align-items:center;gap:2px;}
+  .field-row .val input{
+    font-family:'IBM Plex Mono',monospace;color:var(--growth);font-size:14px;font-weight:500;
+    background:transparent;border:none;border-bottom:1px dashed var(--paper-line);
+    text-align:right;width:110px;padding:2px 2px;-moz-appearance:textfield;
+  }
+  .field-row .val input::-webkit-outer-spin-button,.field-row .val input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  .field-row .val input:focus{outline:none;border-bottom:1px solid var(--growth);}
+  .field-row .val span{font-family:'IBM Plex Mono',monospace;color:var(--text-dim);font-size:14px;}
+
+  .toggle-group{display:flex;gap:8px;margin-bottom:24px;}
+  .toggle-btn{
+    flex:1;background:var(--ink-soft);border:1px solid var(--paper-line);color:var(--text-dim);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;padding:10px 8px;border-radius:8px;cursor:pointer;
+    text-align:center;
+  }
+  .toggle-btn.active{background:var(--growth);color:var(--ink);border-color:var(--growth);font-weight:500;}
+
+  .rate-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+  .rate-chip{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim);
+    border:1px solid var(--paper-line);border-radius:14px;padding:5px 10px;cursor:pointer;background:transparent;
+  }
+  .rate-chip:hover{color:var(--text);}
+  .rate-chip.active{background:var(--gold);color:var(--ink);border-color:var(--gold);font-weight:500;}
+
+  .breakdown-list{margin-top:8px;}
+  .breakdown-row{
+    display:flex;justify-content:space-between;padding:14px 0;border-bottom:1px dashed var(--paper-line);
+    font-family:'IBM Plex Mono',monospace;font-size:14px;
+  }
+  .breakdown-row:last-child{border-bottom:none;}
+  .breakdown-row .k{color:var(--text-dim);}
+  .breakdown-row .v{color:var(--text);font-weight:500;}
+  .breakdown-row.total .v{color:var(--growth);font-size:16px;}
+
+  footer{margin-top:60px;padding-top:24px;border-top:1px solid var(--paper-line);color:var(--text-dim);font-size:12px;}
+  .learn{margin-top:56px;max-width:68ch;}
+  .learn-title{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(22px,3vw,28px);margin:0 0 16px;}
+  .learn-sub{font-family:'Fraunces',serif;font-weight:500;font-size:18px;color:var(--growth);margin:32px 0 12px;}
+  .learn p{color:var(--text-dim);font-size:15px;line-height:1.7;margin:0 0 14px;}
+  .formula{
+    font-family:'IBM Plex Mono',monospace !important;color:var(--gold) !important;background:rgba(232,183,94,0.06);
+    border:1px solid var(--paper-line);border-radius:8px;padding:14px 18px;display:inline-block;font-size:13px !important;
+  }
+  .learn-list{padding-left:20px;color:var(--text-dim);font-size:15px;line-height:1.7;}
+  .learn-list li{margin-bottom:10px;}
+  .learn-list strong{color:var(--text);}
+  .faq-item{margin-bottom:20px;}
+  .faq-q{color:var(--text) !important;font-weight:600;font-size:15px !important;margin-bottom:6px !important;}
+  .ad-slot{
+    margin-top:40px;border:1px dashed var(--paper-line);border-radius:var(--radius);padding:18px;
+    text-align:center;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.06em;
+  }
+</style>
+</head>
+<body>
+<div class="veil">
+<div class="wrap">
+
+  <button class="lang-toggle" id="langToggle" type="button">🌐 <span id="langToggleLabel">English</span></button>
+
+  <nav class="site-nav">
+    <a href="index.html" data-es="Interés compuesto" data-en="Compound interest">Interés compuesto</a>
+    <a href="hipoteca.html" data-es="Hipoteca" data-en="Mortgage">Hipoteca</a>
+    <a href="prestamo.html" data-es="Préstamo personal" data-en="Personal loan">Préstamo personal</a>
+    <a href="iva.html" class="active" data-es="IVA" data-en="VAT">IVA</a>
+  </nav>
+
+  <div class="eyebrow" data-es="Libro de impuestos" data-en="Tax ledger">Libro de impuestos</div>
+  <h1 data-es="Añade o desglosa el IVA en segundos." data-en="Add or break down VAT in seconds.">Añade o desglosa el IVA en segundos.</h1>
+  <p class="sub" data-es="Introduce un importe, elige el tipo y si quieres añadir el IVA o extraerlo de un precio que ya lo incluye." data-en="Enter an amount, choose the rate, and whether you want to add VAT or extract it from a price that already includes it.">Introduce un importe, elige el tipo y si quieres añadir el IVA o extraerlo de un precio que ya lo incluye.</p>
+
+  <div class="ledger-total">
+    <div class="figure-block">
+      <div class="figure-label" id="labelBase" data-es="Base imponible" data-en="Net amount">Base imponible</div>
+      <div class="figure-value" id="outBase">0 €</div>
+    </div>
+    <div class="figure-block">
+      <div class="figure-label" data-es="IVA" data-en="VAT">IVA</div>
+      <div class="figure-value gold" id="outIva">0 €</div>
+    </div>
+    <div class="figure-block">
+      <div class="figure-label" id="labelTotal" data-es="Total con IVA" data-en="Total with VAT">Total con IVA</div>
+      <div class="figure-value growth" id="outTotal">0 €</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h2 data-es="Tus datos" data-en="Your numbers">Tus datos</h2>
+
+      <div class="toggle-group">
+        <button class="toggle-btn active" id="btnAdd" type="button" data-es="Añadir IVA" data-en="Add VAT">Añadir IVA</button>
+        <button class="toggle-btn" id="btnExtract" type="button" data-es="Extraer IVA" data-en="Extract VAT">Extraer IVA</button>
+      </div>
+
+      <div class="field currency-field">
+        <div class="field-row"><label for="currency" data-es="Moneda" data-en="Currency">Moneda</label></div>
+        <select id="currency">
+          <option value="EUR" data-es="€ Euro" data-en="€ Euro">€ Euro</option>
+          <option value="USD" data-es="$ Dólar (EE. UU.)" data-en="$ US Dollar">$ Dólar (EE. UU.)</option>
+          <option value="GBP" data-es="£ Libra esterlina" data-en="£ British Pound">£ Libra esterlina</option>
+          <option value="MXN" data-es="MX$ Peso mexicano" data-en="MX$ Mexican Peso">MX$ Peso mexicano</option>
+          <option value="ARS" data-es="AR$ Peso argentino" data-en="AR$ Argentine Peso">AR$ Peso argentino</option>
+          <option value="COP" data-es="COL$ Peso colombiano" data-en="COL$ Colombian Peso">COL$ Peso colombiano</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <div class="field-row"><label for="nAmount" id="labelAmount" data-es="Importe sin IVA" data-en="Amount without VAT">Importe sin IVA</label></div>
+        <div class="field-row"><span class="val" style="width:100%;justify-content:flex-end;"><input type="number" id="nAmount" min="0" step="1" value="100" style="width:100%;text-align:right;font-size:20px;"><span class="unit unit-currency">€</span></span></div>
+      </div>
+
+      <div class="field">
+        <div class="field-row"><label for="ratePreset" data-es="País / tipo de IVA" data-en="Country / VAT rate">País / tipo de IVA</label></div>
+        <select id="ratePreset">
+          <option value="21" data-es="España — General (21%)" data-en="Spain — Standard (21%)">España — General (21%)</option>
+          <option value="10" data-es="España — Reducido (10%)" data-en="Spain — Reduced (10%)">España — Reducido (10%)</option>
+          <option value="4" data-es="España — Superreducido (4%)" data-en="Spain — Super-reduced (4%)">España — Superreducido (4%)</option>
+          <option value="16" data-es="México — IVA (16%)" data-en="Mexico — VAT (16%)">México — IVA (16%)</option>
+          <option value="19" data-es="Colombia — IVA (19%)" data-en="Colombia — VAT (19%)">Colombia — IVA (19%)</option>
+          <option value="21ar" data-es="Argentina — IVA (21%)" data-en="Argentina — VAT (21%)">Argentina — IVA (21%)</option>
+          <option value="19cl" data-es="Chile — IVA (19%)" data-en="Chile — VAT (19%)">Chile — IVA (19%)</option>
+          <option value="18pe" data-es="Perú — IGV (18%)" data-en="Peru — IGV (18%)">Perú — IGV (18%)</option>
+          <option value="custom" data-es="Personalizado" data-en="Custom">Personalizado</option>
+        </select>
+        <div class="field-row" style="margin-top:14px;" id="customRateRow">
+          <label for="nRate" data-es="Porcentaje" data-en="Percentage">Porcentaje</label>
+          <span class="val"><input type="number" id="nRate" min="0" max="100" step="0.1" value="21" style="width:70px;"><span>%</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 data-es="Desglose" data-en="Breakdown">Desglose</h2>
+      <div class="breakdown-list">
+        <div class="breakdown-row">
+          <span class="k" id="rowBaseLabel" data-es="Base imponible" data-en="Net amount">Base imponible</span>
+          <span class="v" id="rowBase">0 €</span>
+        </div>
+        <div class="breakdown-row">
+          <span class="k" id="rowRateLabel" data-es="Tipo aplicado" data-en="Rate applied">Tipo aplicado</span>
+          <span class="v" id="rowRate">21%</span>
+        </div>
+        <div class="breakdown-row">
+          <span class="k" data-es="Cuota de IVA" data-en="VAT amount">Cuota de IVA</span>
+          <span class="v" id="rowIva">0 €</span>
+        </div>
+        <div class="breakdown-row total">
+          <span class="k" id="rowTotalLabel" data-es="Total" data-en="Total">Total</span>
+          <span class="v" id="rowTotal">0 €</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ad-slot" data-es="— espacio reservado para anuncios (ej. Google AdSense) —" data-en="— ad space (e.g. Google AdSense) —">— espacio reservado para anuncios (ej. Google AdSense) —</div>
+
+  <section class="learn">
+    <h2 class="learn-title" data-es="Qué es el IVA y cómo se calcula" data-en="What VAT is and how it's calculated">Qué es el IVA y cómo se calcula</h2>
+    <p data-es="El IVA (Impuesto sobre el Valor Añadido) es un impuesto al consumo que se aplica sobre el precio de la mayoría de bienes y servicios. Lo paga el consumidor final, aunque quien lo recauda e ingresa a Hacienda es la empresa que vende el producto o presta el servicio. En países latinoamericanos recibe nombres distintos, como IGV en Perú, pero el mecanismo es el mismo." data-en="VAT (Value Added Tax) is a consumption tax applied to the price of most goods and services. It's paid by the end consumer, though it's the selling business that collects it and pays it to the tax authority. In some countries it goes by a different name — for example IGV in Peru — but the mechanism is the same.">El IVA (Impuesto sobre el Valor Añadido) es un impuesto al consumo que se aplica sobre el precio de la mayoría de bienes y servicios. Lo paga el consumidor final, aunque quien lo recauda e ingresa a Hacienda es la empresa que vende el producto o presta el servicio. En países latinoamericanos recibe nombres distintos, como IGV en Perú, pero el mecanismo es el mismo.</p>
+
+    <h3 class="learn-sub" data-es="Añadir IVA a un precio" data-en="Adding VAT to a price">Añadir IVA a un precio</h3>
+    <p class="formula" data-es-html="Total = Base imponible × (1 + tipo de IVA)" data-en-html="Total = Net amount × (1 + VAT rate)">Total = Base imponible × (1 + tipo de IVA)</p>
+    <p data-es="Por ejemplo, con una base de 100 € y un IVA del 21%, el total sería 100 × 1,21 = 121 €." data-en="For example, with a net amount of 100 and a 21% VAT rate, the total would be 100 × 1.21 = 121.">Por ejemplo, con una base de 100 € y un IVA del 21%, el total sería 100 × 1,21 = 121 €.</p>
+
+    <h3 class="learn-sub" data-es="Extraer el IVA de un precio final" data-en="Extracting VAT from a final price">Extraer el IVA de un precio final</h3>
+    <p class="formula" data-es-html="Base imponible = Total ÷ (1 + tipo de IVA)" data-en-html="Net amount = Total ÷ (1 + VAT rate)">Base imponible = Total ÷ (1 + tipo de IVA)</p>
+    <p data-es="Este es el cálculo que más gente busca y más se suele hacer mal: no basta con restar el porcentaje directamente del total, porque el IVA se calculó sobre la base, no sobre el total. Por eso hay que dividir, no restar un porcentaje sin más." data-en="This is the calculation most people search for, and the one most often done wrong: you can't just subtract the percentage directly from the total, because VAT was calculated on the net amount, not on the total. That's why you need to divide, not just subtract a percentage.">Este es el cálculo que más gente busca y más se suele hacer mal: no basta con restar el porcentaje directamente del total, porque el IVA se calculó sobre la base, no sobre el total. Por eso hay que dividir, no restar un porcentaje sin más.</p>
+
+    <h3 class="learn-sub" data-es="Preguntas frecuentes" data-en="Frequently asked questions">Preguntas frecuentes</h3>
+    <div class="faq">
+      <div class="faq-item">
+        <p class="faq-q" data-es="¿Por qué no puedo simplemente restar el 21% del precio total?" data-en="Why can't I just subtract 21% from the total price?">¿Por qué no puedo simplemente restar el 21% del precio total?</p>
+        <p data-es="Porque el 21% se calculó sobre la base, no sobre el total, así que representa un porcentaje distinto una vez incluido en el precio final. Restar directamente un 21% del total siempre da un resultado incorrecto (demasiado bajo)." data-en="Because the 21% was calculated on the net amount, not on the total, so it represents a different share once it's included in the final price. Subtracting 21% directly from the total always gives an incorrect (too low) result.">Porque el 21% se calculó sobre la base, no sobre el total, así que representa un porcentaje distinto una vez incluido en el precio final. Restar directamente un 21% del total siempre da un resultado incorrecto (demasiado bajo).</p>
+      </div>
+      <div class="faq-item">
+        <p class="faq-q" data-es="¿Los tipos de IVA de esta calculadora están siempre actualizados?" data-en="Are the VAT rates in this calculator always up to date?">¿Los tipos de IVA de esta calculadora están siempre actualizados?</p>
+        <p data-es="Los tipos incluidos son los generales vigentes en cada país al construir esta herramienta, pero los gobiernos los cambian de vez en cuando. Si tienes dudas sobre el tipo exacto aplicable a tu caso, usa la opción 'Personalizado' con el porcentaje correcto o consulta la fuente oficial de tu país." data-en="The included rates are the standard ones in effect in each country at the time this tool was built, but governments do change them occasionally. If you're unsure of the exact rate for your case, use the 'Custom' option with the correct percentage or check your country's official source.">Los tipos incluidos son los generales vigentes en cada país al construir esta herramienta, pero los gobiernos los cambian de vez en cuando. Si tienes dudas sobre el tipo exacto aplicable a tu caso, usa la opción 'Personalizado' con el porcentaje correcto o consulta la fuente oficial de tu país.</p>
+      </div>
+      <div class="faq-item">
+        <p class="faq-q" data-es="¿Todos los productos tienen el mismo tipo de IVA?" data-en="Do all products have the same VAT rate?">¿Todos los productos tienen el mismo tipo de IVA?</p>
+        <p data-es="No. La mayoría de países aplican varios tipos según el tipo de producto: uno general, y tipos reducidos para alimentos básicos, libros, medicamentos o servicios concretos. Elige el tipo que corresponda a tu producto o servicio." data-en="No. Most countries apply several rates depending on the type of product: a standard rate, and reduced rates for staple foods, books, medicine, or specific services. Choose the rate that matches your product or service.">No. La mayoría de países aplican varios tipos según el tipo de producto: uno general, y tipos reducidos para alimentos básicos, libros, medicamentos o servicios concretos. Elige el tipo que corresponda a tu producto o servicio.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer data-es="Los tipos de IVA mostrados son orientativos y pueden variar. Consulta siempre la fuente oficial de tu país para casos concretos." data-en="The VAT rates shown are for reference and may vary. Always check your country's official source for specific cases.">Los tipos de IVA mostrados son orientativos y pueden variar. Consulta siempre la fuente oficial de tu país para casos concretos.</footer>
+
+</div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+let currentLang = 'es';
+const langBtn = $('langToggle'), langLabel = $('langToggleLabel');
+function setLang(lang){
+  currentLang = lang;
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-es]').forEach(el => {
+    el.textContent = el.getAttribute(lang === 'es' ? 'data-es' : 'data-en');
+  });
+  document.querySelectorAll('[data-es-html]').forEach(el => {
+    el.innerHTML = el.getAttribute(lang === 'es' ? 'data-es-html' : 'data-en-html');
+  });
+  langLabel.textContent = lang === 'es' ? 'English' : 'Español';
+  render();
+}
+langBtn.addEventListener('click', () => setLang(currentLang === 'es' ? 'en' : 'es'));
+
+const CURRENCIES = {
+  EUR:{locale:'es-ES', code:'EUR', symbol:'€'},
+  USD:{locale:'en-US', code:'USD', symbol:'$'},
+  GBP:{locale:'en-GB', code:'GBP', symbol:'£'},
+  MXN:{locale:'es-MX', code:'MXN', symbol:'MX$'},
+  ARS:{locale:'es-AR', code:'ARS', symbol:'AR$'},
+  COP:{locale:'es-CO', code:'COP', symbol:'COL$'},
+};
+const currencySelect = $('currency');
+function fmt(n){
+  const c = CURRENCIES[currencySelect.value];
+  try{
+    return new Intl.NumberFormat(c.locale, {style:'currency', currency:c.code, maximumFractionDigits:2}).format(n);
+  }catch(e){
+    return n.toFixed(2) + ' ' + c.symbol;
+  }
+}
+function updateCurrencyUnits(){
+  const symbol = CURRENCIES[currencySelect.value].symbol;
+  document.querySelectorAll('.unit-currency').forEach(el => el.textContent = symbol);
+}
+currencySelect.addEventListener('change', render);
+
+let mode = 'add'; // 'add' o 'extract'
+const btnAdd = $('btnAdd'), btnExtract = $('btnExtract');
+btnAdd.addEventListener('click', () => setMode('add'));
+btnExtract.addEventListener('click', () => setMode('extract'));
+
+function setMode(m){
+  mode = m;
+  btnAdd.classList.toggle('active', m==='add');
+  btnExtract.classList.toggle('active', m==='extract');
+  const labelAmount = $('labelAmount');
+  if(m === 'add'){
+    labelAmount.setAttribute('data-es','Importe sin IVA');
+    labelAmount.setAttribute('data-en','Amount without VAT');
+  } else {
+    labelAmount.setAttribute('data-es','Importe con IVA');
+    labelAmount.setAttribute('data-en','Amount with VAT');
+  }
+  labelAmount.textContent = labelAmount.getAttribute(currentLang==='es' ? 'data-es' : 'data-en');
+  render();
+}
+
+const ratePreset = $('ratePreset'), nRate = $('nRate'), customRateRow = $('customRateRow');
+const RATE_MAP = {21:21, 10:10, 4:4, 16:16, 19:19, '21ar':21, '19cl':19, '18pe':18};
+
+ratePreset.addEventListener('change', () => {
+  const val = ratePreset.value;
+  if(val === 'custom'){
+    customRateRow.style.display = 'flex';
+  } else {
+    customRateRow.style.display = 'none';
+    nRate.value = RATE_MAP[val];
+  }
+  render();
+});
+nRate.addEventListener('input', render);
+
+const nAmount = $('nAmount');
+nAmount.addEventListener('input', render);
+
+function compute(){
+  const amount = Math.max(0, +nAmount.value || 0);
+  const rate = Math.max(0, +nRate.value || 0) / 100;
+  let base, iva, total;
+  if(mode === 'add'){
+    base = amount;
+    iva = base * rate;
+    total = base + iva;
+  } else {
+    total = amount;
+    base = total / (1 + rate);
+    iva = total - base;
+  }
+  return {base, iva, total, rate};
+}
+
+function render(){
+  const {base, iva, total, rate} = compute();
+
+  $('outBase').textContent = fmt(base);
+  $('outIva').textContent = fmt(iva);
+  $('outTotal').textContent = fmt(total);
+
+  $('rowBase').textContent = fmt(base);
+  $('rowRate').textContent = (rate*100).toFixed(rate*100 % 1 === 0 ? 0 : 1) + '%';
+  $('rowIva').textContent = fmt(iva);
+  $('rowTotal').textContent = fmt(total);
+
+  // Actualiza la etiqueta din\u00e1mica seg\u00fan modo, respetando idioma
+  const labelTotal = $('labelTotal'), rowTotalLabel = $('rowTotalLabel');
+  const totalEs = mode === 'add' ? 'Total con IVA' : 'Total (ya introducido)';
+  const totalEn = mode === 'add' ? 'Total with VAT' : 'Total (as entered)';
+  labelTotal.setAttribute('data-es', totalEs);
+  labelTotal.setAttribute('data-en', totalEn);
+  labelTotal.textContent = labelTotal.getAttribute(currentLang==='es' ? 'data-es' : 'data-en');
+  rowTotalLabel.setAttribute('data-es', totalEs);
+  rowTotalLabel.setAttribute('data-en', totalEn);
+  rowTotalLabel.textContent = rowTotalLabel.getAttribute(currentLang==='es' ? 'data-es' : 'data-en');
+}
+
+updateCurrencyUnits();
+setMode('add');
+</script>
+</body>
+</html>
