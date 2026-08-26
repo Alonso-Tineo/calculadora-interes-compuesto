@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://calculadora-de-interescompuesto.netlify.app/sitemap.xml
